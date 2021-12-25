@@ -2,6 +2,8 @@ import base64
 
 from urllib import parse
 
+from tqdm.auto import tqdm
+
 
 def extraer_datos_unidad(unidad, provincia):
     """Extraer propiedades de una unidad (nombre, url, etc)"""
@@ -77,6 +79,35 @@ def extract_hours(driver, province, unidad):
         horas_params.append(hora_params)
     
     return horas_params
+
+
+def extract_unidad(driver, province, unidad):
+    """Extract all slots for a police unit
+    
+    Note: current month and day URLs are not selectable
+    """
+    unidad_name = unidad['name']
+    driver.get(unidad['url'])
+    
+    # Get all slots for today
+    citas = extract_hours(driver, province, unidad_name)
+
+    # Get all slots for next days in the same month
+    month_days = get_remaining_days(driver)
+    for date, date_url in tqdm(month_days.items(), desc='Current month'):
+        driver.get(date_url)
+        citas.extend(extract_hours(driver, province, unidad_name))
+
+    # Get all slots for all days in the next months
+    next_months = get_remaining_months(driver)
+    for month, month_url in next_months.items():
+        driver.get(month_url)
+        month_days = get_remaining_days(driver)
+        for _, date_url in tqdm(month_days.items(), desc=month):
+            driver.get(date_url)
+            citas.extend(extract_hours(driver, province, unidad_name))
+    
+    return citas
 
 
 def download_captcha_img(driver, save_name='captcha.jpg', class_name='borderCapcha'):
