@@ -1,20 +1,7 @@
 import base64
-import os
-
-from PIL import Image
-
-import pytesseract
 
 from urllib import parse
-from retry import retry
-from pytesseract import image_to_string
-from dotenv import load_dotenv
 
-load_dotenv()
-
-URL_LOGIN = 'https://www.citapreviadnie.es/citaPreviaDniExp/InicioDNINIE.action'
-URL_DNI = 'https://www.citapreviadnie.es/citaPreviaDniExp/InicioTramite.action?idDocumento=D'
-URL_PASAPORTE = 'https://www.citapreviadnie.es/citaPreviaDniExp/InicioTramite.action?idDocumento=P'
 
 def extraer_datos_unidad(unidad, provincia):
     """Extraer propiedades de una unidad (nombre, url, etc)"""
@@ -105,42 +92,3 @@ def download_captcha_img(driver, save_name='captcha.jpg', class_name='borderCapc
 
     with open(save_name, 'wb') as f:
         f.write(base64.b64decode(img_base64))
-
-
-@retry(exceptions=ValueError, tries=10)
-def login(driver, tesseract_check=False, tesseract_path="C:\\Program Files\\Tesseract-OCR\\tesseract.exe"):
-    
-    driver.get(URL_LOGIN)
-    
-    download_captcha_img(driver)
-    
-    if tesseract_check: 
-        pytesseract.pytesseract.tesseract_cmd = tesseract_path
-    
-    captcha_img = Image.open('captcha.jpg')
-    solved_captcha = image_to_string(captcha_img).replace(' ', '')[:4].upper()
-    
-    NUM_DOCUMENTO = os.environ['NUM_DOCUMENTO']
-    LETRA_DOCUMENTO = os.environ['LETRA_DOCUMENTO']
-    CODIGO_EQUIPO = os.environ['CODIGO_EQUIPO']
-    FECHA_VALIDEZ = os.environ['FECHA_VALIDEZ']
-
-    inputs = {
-        'numDocumento': NUM_DOCUMENTO,
-        'letraDocumento': LETRA_DOCUMENTO,
-        'codEquipo': CODIGO_EQUIPO,
-        'fechaValidez': FECHA_VALIDEZ,
-        'codSeguridad': solved_captcha,
-    }
-    
-    for k,v in inputs.items():
-        elem = driver.find_element_by_id(k)
-        elem.send_keys(v)
-
-    submit_button = driver.find_element_by_xpath('/html/body/div/div[4]/div[1]/form/p[6]/input[1]')
-    submit_button.click()
-
-    errors = driver.find_elements_by_class_name('pError')
-        
-    if errors:    
-        raise ValueError('CapthaError')
