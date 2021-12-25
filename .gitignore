@@ -1,2 +1,6 @@
 .ipynb_checkpoints
 .env
+__pycache__
+captcha.jpg
+geckodriver.log
+chromedriver.exe
