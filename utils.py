@@ -17,6 +17,8 @@ URL_LOGIN = 'https://www.citapreviadnie.es/citaPreviaDniExp/InicioDNINIE.action'
 URL_DNI = 'https://www.citapreviadnie.es/citaPreviaDniExp/InicioTramite.action?idDocumento=D'
 URL_PASAPORTE = 'https://www.citapreviadnie.es/citaPreviaDniExp/InicioTramite.action?idDocumento=P'
 
+API_KEY = os.environ['GOOGLE_MAPS_API_KEY']
+
 def extraer_datos_unidad(unidad, provincia):
     """Extraer propiedades de una unidad (nombre, url, etc)"""
     link = unidad.find_element_by_tag_name('a')
